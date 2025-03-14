@@ -147,31 +147,3 @@ ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 # Set the default command
 CMD [ "--listen", "--port","8188", "--preview-method", "auto", "--multi-user" ]
-
-# Stage for sd-turbo
-FROM base AS sd-turbo
-COPY ./build-assets/app/models/checkpoints/sd_turbo.safetensors /app/models/checkpoints/sd_turbo.safetensors
-
-# Stage for sd-1.5
-FROM base AS sd-1.5
-COPY ./build-assets/app/models/checkpoints/v1-5-pruned-emaonly.ckpt /app/models/checkpoints/v1-5-pruned-emaonly.ckpt
-
-# Stage for SVD 14 Frame
-FROM base AS svd-14-frame
-COPY ./build-assets/app/models/checkpoints/svd.safetensors /app/models/checkpoints/svd.safetensors
-
-# Stage for SVD 25 Frame
-FROM base AS svd-25-frame
-COPY ./build-assets/app/models/checkpoints/svd_xt_image_decoder.safetensors /app/models/checkpoints/svd_xt_image_decoder.safetensors
-
-# Stage for both SVD models
-FROM base AS svd
-COPY --from=3 /app/models/checkpoints/svd.safetensors /app/models/checkpoints/svd.safetensors
-COPY --from=4 /app/models/checkpoints/svd_xt_image_decoder.safetensors /app/models/checkpoints/svd_xt_image_decoder.safetensors
-
-# Stage for models
-FROM svd AS all-models
-COPY --from=1 /app/models/checkpoints/sd_turbo.safetensors /app/models/checkpoints/sd_turbo.safetensors
-COPY --from=2 /app/models/checkpoints/v1-5-pruned-emaonly.ckpt /app/models/checkpoints/v1-5-pruned-emaonly.ckpt
-COPY --from=3 /app/models/checkpoints/svd.safetensors /app/models/checkpoints/svd.safetensors
-COPY --from=4 /app/models/checkpoints/svd_xt_image_decoder.safetensors /app/models/checkpoints/svd_xt_image_decoder.safetensors

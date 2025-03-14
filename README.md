@@ -18,7 +18,7 @@ The `/comfyui/user` volume is particularly important as it stores your workflow 
 Build and run the container:
 
 ```shell
-make
+make build
 docker run -d --gpus all -p 8188:8188 \
     -v ./user:/comfyui/user \
     -v ./models:/comfyui/models \

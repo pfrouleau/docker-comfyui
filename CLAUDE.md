@@ -1,11 +1,8 @@
 # CLAUDE.md - Docker ComfyUI Repository Guidelines
 
 ## Build Commands
-- `make` or `make base` - Build base Docker image
-- `make sd-1.5` - Build with SD 1.5 model
-- `make sd-turbo` - Build with SD Turbo model
-- `make svd` - Build with SVD models
-- `make all-models` - Build with all models
+- `make build` or `make` or `make base` - Build Docker image
+- `make push` - Build and push Docker image to Docker Hub
 
 ## Test Commands
 - `make test` - Verify Docker image via VERSION env variable
