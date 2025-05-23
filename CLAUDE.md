@@ -1,4 +1,6 @@
-# CLAUDE.md - Docker ComfyUI Repository Guidelines
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build Commands
 - `make build` or `make` or `make base` - Build Docker image
@@ -20,8 +22,9 @@ docker run -d --gpus all -p 8188:8188 \
 ```
 
 ## Code Style Guidelines
-- **Shell Scripts**: Use bash with `set -e` or `set -xe`, 4-space indentation
-- **Docker**: Multi-stage builds, cleanup caches, drop to non-root user
-- **Makefile**: Use `.PHONY`, 4-space indentation, variables at top
-- **Git Commits**: Use conventional prefixes (feat:, fix:, docs:, chore:)
-- **Python**: Python 3, requirements via pip, editable installs for dev
+- **Shell Scripts**: Use bash with `#!/bin/bash`, functions for reusability, error handling with `|| echo` for warnings
+- **Docker**: Multi-stage builds, cleanup apt caches, drop to non-root user (comfyui:users), use `set -xe` for debugging
+- **Makefile**: Use `.PHONY` targets, 4-space indentation, variables at top, semicolons after commands
+- **Git Commits**: Use conventional prefixes (feat:, fix:, docs:, chore:) with emojis
+- **Python**: Use pip with `--no-cache-dir`, editable installs with `-e .`, handle requirement.txt files
+- **Volume Mounts**: Always preserve `/comfyui/user` for workflows, separate data persistence patterns
