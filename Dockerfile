@@ -4,9 +4,10 @@ FROM ${BASE_IMAGE} AS base
 # Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install deps
-RUN set -xe; \
-    apt update && apt install -y \
+# Install system dependencies
+RUN set -xe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
         bash-completion \
         build-essential \
         cmake \
@@ -33,24 +34,22 @@ RUN set -xe; \
         mesa-utils \
         ninja-build \
         pkg-config \
-        pkg-config \
         python-is-python3 \
         python3 \
         python3-dev \
         python3-opencv \
         python3-pip \
-        python3-pip \
         python3-psutil \
         rsync \
         software-properties-common \
-        sudo \
         unzip \
         vim \
         wget \
         xauth \
-        xvfb; \
-    add-apt-repository universe; \
-    apt-get update && apt-get install -y \
+        xvfb && \
+    add-apt-repository universe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
         ffmpeg \
         libavcodec-dev \
         libavdevice-dev \
@@ -59,91 +58,98 @@ RUN set -xe; \
         libavutil-dev \
         libswresample-dev \
         libswscale-dev \
-        python3-av; \
-    apt clean; \
-    rm -rf /var/lib/apt/lists/*; \
-    rm -rf /var/cache/apt; \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y;
+        python3-av && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Create our group & user.
-RUN set -xe; \
-    useradd -u 1000 -g 100 -G sudo -r -d /comfyui -s /bin/sh comfyui; \
-    echo "comfyui ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers; \
-    mkdir -p /comfyui; \
-    mkdir -p /app;
+# Install Python packages globally
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
-# Setup ComfyUI
+# Setup ComfyUI in /opt (read-only application directory)
 ARG VERSION=v0.3.26
-RUN set -xe; \
-    git clone https://github.com/comfyanonymous/ComfyUI.git /app; \
-    cd /app; \
-    git fetch --all --tags; \
-    git checkout ${VERSION}; \
-    pip install --no-cache-dir -r requirements.txt; \
-    pip install --no-cache-dir comfy-cli;
+RUN set -xe && \
+    git clone https://github.com/comfyanonymous/ComfyUI.git /opt/comfyui && \
+    cd /opt/comfyui && \
+    git fetch --all --tags && \
+    git checkout ${VERSION} && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir comfy-cli
 
 # Setup ComfyUI Manager
 ARG UI_MANAGER_VERSION=main
-RUN set -xe; \
-    git clone https://github.com/ltdrdata/ComfyUI-Manager.git /app/custom_nodes/ComfyUI-Manager; \
-    cd /app/custom_nodes/ComfyUI-Manager; \
-    git fetch --all --tags; \
-    git checkout ${UI_MANAGER_VERSION}; \
-    pip install --no-cache-dir -r requirements.txt;
+RUN set -xe && \
+    git clone https://github.com/ltdrdata/ComfyUI-Manager.git /opt/comfyui/custom_nodes/ComfyUI-Manager && \
+    cd /opt/comfyui/custom_nodes/ComfyUI-Manager && \
+    git fetch --all --tags && \
+    git checkout ${UI_MANAGER_VERSION} && \
+    pip3 install --no-cache-dir -r requirements.txt
 
+# Create directories and copy entrypoint
 ARG BUILD_DATE
-# Copy our entrypoint into the container.
-COPY ./runtime-assets /
+COPY ./runtime-assets/usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/entrypoint.sh
 
-# Ensure entrypoint is executable
-RUN set -xe; \
-    chmod 0755 /usr/local/bin/entrypoint.sh; \
-    chown -R comfyui:users /app; \
-    chown -R comfyui:users /comfyui;
+# Create data directories with proper permissions for any user
+RUN set -xe && \
+    mkdir -p /data/{models,output,input,user,custom_nodes} && \
+    chmod -R 777 /data && \
+    chmod -R 755 /opt/comfyui
 
-# Labels / Metadata.
+# Labels / Metadata
 LABEL \
     org.opencontainers.image.authors="James Brink <brink.james@gmail.com>" \
     org.opencontainers.image.description="ComfyUI Interface for Stable Diffusion" \
     org.opencontainers.image.revision="1" \
-    org.opencontainers.image.source="https://github.com/jamesbrink/comfyui" \
+    org.opencontainers.image.source="https://github.com/jamesbrink/docker-comfyui" \
     org.opencontainers.image.title="comfyui" \
     org.opencontainers.image.vendor="jamesbrink" \
     org.opencontainers.image.version="${VERSION}" \
     org.opencontainers.image.created="${BUILD_DATE}"
 
-# Setup our environment variables.
+# Environment variables
 ENV \
     DISPLAY=:99 \
-    HOME="/comfyui" \
+    HOME="/data/user" \
     NVIDIA_DRIVER_CAPABILITIES=all \
-    PATH="/usr/local/bin:/comfyui/.local/bin:$PATH" \
+    PATH="/usr/local/bin:/data/user/.local/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    VERSION="${VERSION}"
+    VERSION="${VERSION}" \
+    COMFYUI_PATH="/opt/comfyui" \
+    DATA_PATH="/data"
 
-# Drop down to our unprivileged user.
+# Use a high UID that's less likely to conflict
+# This works better with both Docker and Podman user namespace mapping
+ARG USER_ID=10001
+ARG GROUP_ID=10001
+
+RUN set -xe && \
+    groupadd -g ${GROUP_ID} comfyui && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} -d /data/user -s /bin/bash -m comfyui && \
+    chown -R comfyui:comfyui /data
+
+# Switch to non-root user
 USER comfyui
-WORKDIR /comfyui
+WORKDIR /data/user
 
-# Setup git
-RUN set -xe; \
-    git config --global user.name "ComfyUI"; \
-    git config --global user.email "ComfyUI@urandom.io"; \
-    git config --global init.defaultBranch main; \
-    git config --global core.editor "vim"; \
-    git config --global --add safe.directory /comfyui; \
-    git config --global --add safe.directory /comfyui/custom_nodes/ComfyUI-Manager;
+# Setup git for the user
+RUN set -xe && \
+    git config --global user.name "ComfyUI" && \
+    git config --global user.email "comfyui@container.local" && \
+    git config --global init.defaultBranch main && \
+    git config --global core.editor "vim" && \
+    git config --global --add safe.directory "*"
 
-# Expose our http port.
+# Expose HTTP port
 EXPOSE 8188
 
-# Volumes
-VOLUME [ "/comfyui", "/comfyui/models", "/comfyui/output", "/comfyui/input", "/comfyui/user" ]
+# Volumes for data persistence
+VOLUME ["/data/models", "/data/output", "/data/input", "/data/user", "/data/custom_nodes"]
 
-# Set the entrypoint.
-ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+# Set the entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# Set the default command
-CMD [ "--listen", "--port","8188", "--preview-method", "auto", "--multi-user" ]
+# Default command arguments
+CMD ["--listen", "--port", "8188", "--preview-method", "auto", "--multi-user"]

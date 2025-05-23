@@ -44,10 +44,10 @@ jobs:
           target: base
           build-args: |
             BASE_IMAGE=nvidia/cuda:12.6.3-devel-ubuntu22.04
-            VERSION=v0.3.26
+            VERSION=v0.3.34
             BUILD_DATE=${{ env.BUILD_DATE }}
           tags: |
             jamesbrink/comfyui:latest
             jamesbrink/comfyui:${{ github.sha }}
             jamesbrink/comfyui:${{ env.BRANCH_NAME }}
-            jamesbrink/comfyui:v0.3.26
+            jamesbrink/comfyui:v0.3.34

@@ -34,14 +34,16 @@ spec:
           limits:
             nvidia.com/gpu: "1"
         volumeMounts:
-        - mountPath: /comfyui/user
+        - mountPath: /data/user
           name: user-data
-        - mountPath: /comfyui/models
+        - mountPath: /data/models
           name: models-data
-        - mountPath: /comfyui/output
+        - mountPath: /data/output
           name: output-data
-        - mountPath: /comfyui/input
+        - mountPath: /data/input
           name: input-data
+        - mountPath: /data/custom_nodes
+          name: custom-nodes-data
       runtimeClassName: nvidia
       volumes:
       - name: user-data
@@ -56,3 +58,6 @@ spec:
       - name: input-data
         persistentVolumeClaim:
           claimName: comfyui-input-pvc
+      - name: custom-nodes-data
+        persistentVolumeClaim:
+          claimName: comfyui-custom-nodes-pvc

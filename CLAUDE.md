@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Current Version
+- **ComfyUI**: v0.3.34 (latest release)
+- **Architecture**: Optimized with permission fixes for Docker/Podman compatibility
+
 ## Build Commands
 - `make build` or `make` or `make base` - Build Docker image
 - `make push` - Build and push Docker image to Docker Hub
@@ -14,10 +18,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Docker Run Commands
 ```bash
 docker run -d --gpus all -p 8188:8188 \
-    -v ./user:/comfyui/user \
-    -v ./models:/comfyui/models \
-    -v ./output:/comfyui/output \
-    -v ./input:/comfyui/input \
+    -v ./user:/data/user \
+    -v ./models:/data/models \
+    -v ./output:/data/output \
+    -v ./input:/data/input \
+    -v ./custom_nodes:/data/custom_nodes \
+    --name comfyui jamesbrink/comfyui
+```
+
+## Podman Compatibility
+```bash
+podman run -d --device nvidia.com/gpu=all -p 8188:8188 \
+    -v ./user:/data/user:Z \
+    -v ./models:/data/models:Z \
+    -v ./output:/data/output:Z \
+    -v ./input:/data/input:Z \
+    -v ./custom_nodes:/data/custom_nodes:Z \
     --name comfyui jamesbrink/comfyui
 ```
 
@@ -27,4 +43,5 @@ docker run -d --gpus all -p 8188:8188 \
 - **Makefile**: Use `.PHONY` targets, 4-space indentation, variables at top, semicolons after commands
 - **Git Commits**: Use conventional prefixes (feat:, fix:, docs:, chore:) with emojis
 - **Python**: Use pip with `--no-cache-dir`, editable installs with `-e .`, handle requirement.txt files
-- **Volume Mounts**: Always preserve `/comfyui/user` for workflows, separate data persistence patterns
+- **Volume Mounts**: Always preserve `/data/user` for workflows, separate data persistence patterns
+- **Updates**: Application in `/opt/comfyui`, user data in `/data`, clean separation for updates

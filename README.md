@@ -2,16 +2,45 @@
 
 ## About
 
-A Docker image for running [ComfyUI][ComfyUI] with [ComfyUI Manager][ComfyUIManager] pre-installed. This image has been tested on **Linux with NVIDIA GPUs**. 
+A Docker image for running [ComfyUI][ComfyUI] with [ComfyUI Manager][ComfyUIManager] pre-installed. This image has been tested on **Linux with NVIDIA GPUs** and is fully compatible with both Docker and Podman.
+
+**Current Version**: ComfyUI v0.3.34 (latest release)
+
+### Key Features:
+- ✅ **Latest ComfyUI**: v0.3.34 with newest dependencies and features
+- ✅ **Permission-Fixed**: Works seamlessly with Docker and rootless Podman
+- ✅ **Easy Updates**: Clean separation of application and user data
+- ✅ **Data Persistence**: Workflows, models, and settings preserved across updates
+- ✅ **Pre-installed Manager**: ComfyUI Manager for easy custom node management 
 
 The following volume mounts are recommended for data persistence:
-- `/comfyui/user`: Contains your workflows and personal workspace settings. Always mount this to preserve your workflows when updating or recreating the container
-- `/comfyui/models`: Model files (checkpoints, VAE, Loras, etc.)
-- `/comfyui/custom_nodes`: Custom nodes and extensions
-- `/comfyui/output`: Generated images and other outputs
-- `/comfyui/input`: Input images and other data
+- `/data/user`: Contains your workflows and personal workspace settings. Always mount this to preserve your workflows when updating or recreating the container
+- `/data/models`: Model files (checkpoints, VAE, Loras, etc.)
+- `/data/custom_nodes`: Custom nodes and extensions
+- `/data/output`: Generated images and other outputs
+- `/data/input`: Input images and other data
 
-The `/comfyui/user` volume is particularly important as it stores your workflow files (`.json`), ensuring you don't lose your work when updating ComfyUI or rebuilding the container. Other volumes like `models`, `input`, and `output` can be shared between different AI tools for a more integrated setup.
+The `/data/user` volume is particularly important as it stores your workflow files (`.json`), ensuring you don't lose your work when updating ComfyUI or rebuilding the container. Other volumes like `models`, `input`, and `output` can be shared between different AI tools for a more integrated setup.
+
+## Updates and Upgrades
+
+This container implements a clean separation between the ComfyUI application (in `/opt/comfyui`) and user data (in `/data`). To update ComfyUI:
+
+1. Pull or build a newer version of the container
+2. Stop the current container: `docker stop comfyui`
+3. Start with the new image: `docker run ...` (same command as before)
+
+Your user data, models, and custom nodes will be preserved across updates.
+
+## Architecture & Performance
+
+This container implements an optimized architecture designed for production use:
+
+- **Application Layer**: ComfyUI installed in `/opt/comfyui` (read-only, versioned)
+- **Data Layer**: User data in `/data` (persistent, user-controlled volumes)
+- **Working Layer**: Symlinked copy in `/data/work` (efficient, space-saving)
+- **Permission Model**: High UID (10001) for Docker/Podman compatibility
+- **Update Model**: Rebuild container for app updates, volumes preserve data
 
 ## Usage
 
@@ -20,10 +49,11 @@ Build and run the container:
 ```shell
 make build
 docker run -d --gpus all -p 8188:8188 \
-    -v ./user:/comfyui/user \
-    -v ./models:/comfyui/models \
-    -v ./output:/comfyui/output \
-    -v ./input:/comfyui/input \
+    -v ./user:/data/user \
+    -v ./models:/data/models \
+    -v ./output:/data/output \
+    -v ./input:/data/input \
+    -v ./custom_nodes:/data/custom_nodes \
     --name comfyui jamesbrink/comfyui
 ```
 
@@ -31,10 +61,25 @@ Optionally run container on host network:
 
 ```shell
 docker run -d --gpus all --network=host \
-    -v ./user:/comfyui/user \
-    -v ./models:/comfyui/models \
-    -v ./output:/comfyui/output \
-    -v ./input:/comfyui/input \
+    -v ./user:/data/user \
+    -v ./models:/data/models \
+    -v ./output:/data/output \
+    -v ./input:/data/input \
+    -v ./custom_nodes:/data/custom_nodes \
+    --name comfyui jamesbrink/comfyui
+```
+
+### Using with Podman
+
+This image is fully compatible with Podman and rootless containers:
+
+```shell
+podman run -d --device nvidia.com/gpu=all -p 8188:8188 \
+    -v ./user:/data/user:Z \
+    -v ./models:/data/models:Z \
+    -v ./output:/data/output:Z \
+    -v ./input:/data/input:Z \
+    -v ./custom_nodes:/data/custom_nodes:Z \
     --name comfyui jamesbrink/comfyui
 ```
 
@@ -47,16 +92,18 @@ mkdir -p ~/AI/ComfyUI/user           # Workflows and workspace settings
 mkdir -p ~/AI/Models/StableDiffusion # Shared models
 mkdir -p ~/AI/Output                 # Generated images
 mkdir -p ~/AI/Input                  # Input data
+mkdir -p ~/AI/ComfyUI/custom_nodes   # Custom nodes
 ```
 
 Then run the container with these mapped volumes:
 
 ```shell
 docker run -d --gpus all --network=host \
-    -v ~/AI/ComfyUI/user:/comfyui/user \
-    -v ~/AI/Models/StableDiffusion/:/comfyui/models \
-    -v ~/AI/Output:/comfyui/output \
-    -v ~/AI/Input:/comfyui/input \
+    -v ~/AI/ComfyUI/user:/data/user \
+    -v ~/AI/Models/StableDiffusion/:/data/models \
+    -v ~/AI/Output:/data/output \
+    -v ~/AI/Input:/data/input \
+    -v ~/AI/ComfyUI/custom_nodes:/data/custom_nodes \
     --name comfyui jamesbrink/comfyui
 ```
 
@@ -128,9 +175,10 @@ kubectl apply -f k8s/service.yaml
 
 ### Storage Configuration
 
-The deployment uses four PersistentVolumeClaims:
+The deployment uses five PersistentVolumeClaims:
 - `comfyui-user-pvc`: 1GB for workflows and workspace settings
-- `comfyui-models-pvc`: 50GB for model files
+- `comfyui-models-pvc`: 200GB for model files
+- `comfyui-custom-nodes-pvc`: 5GB for custom nodes and extensions
 - `comfyui-output-pvc`: 10GB for generated images
 - `comfyui-input-pvc`: 10GB for input data
 
