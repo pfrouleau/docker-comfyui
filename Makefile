@@ -40,7 +40,7 @@ push: build
 # List built images
 .PHONY: list
 list:
-	docker images $(REPO_NAMESPACE)/$(IMAGE_NAME) --filter "dangling=false"
+	docker images $(REPO_NAMESPACE)/$(IMAGE_NAME)
 
 # Run any tests
 .PHONY: test
