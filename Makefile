@@ -9,7 +9,7 @@ CUDA_VERSION            ?= 12.6.3
 BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-ubuntu22.04
 SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-VERSION                 := v0.3.26
+VERSION                 := v0.3.34
 UI_MANAGER_VERSION      ?= main
 
 # Default target is to build container
@@ -45,7 +45,7 @@ list:
 # Run any tests
 .PHONY: test
 test:
-	docker run -t $(REPO_NAMESPACE)/$(IMAGE_NAME) env | grep VERSION | grep $(VERSION)
+	docker run --rm --entrypoint="" -t $(REPO_NAMESPACE)/$(IMAGE_NAME) env | grep VERSION | grep $(VERSION)
 
 # Remove existing images
 .PHONY: clean
