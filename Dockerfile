@@ -171,4 +171,4 @@ VOLUME ["/data/models", "/data/output", "/data/input", "/data/user", "/data/cust
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Default command arguments
-CMD ["--listen", "--port", "8188", "--preview-method", "auto", "--multi-user"]
+CMD ["--listen", "--port", "8188", "--preview-method", "auto"]
