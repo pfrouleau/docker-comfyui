@@ -29,6 +29,7 @@ docker run -d --gpus all -p 8188:8188 \
 ## Podman Compatibility
 ```bash
 podman run -d --device nvidia.com/gpu=all -p 8188:8188 \
+    --init
     -v ./user:/data/user:Z \
     -v ./models:/data/models:Z \
     -v ./output:/data/output:Z \
