@@ -139,7 +139,7 @@ RUN set -xe && \
     git config --global user.name "ComfyUI" && \
     git config --global user.email "comfyui@container.local" && \
     git config --global init.defaultBranch main && \
-    git config --global core.editor "vim" && \
+    git config --global core.editor "nano" && \
     git config --global --add safe.directory "*"
 
 # Expose HTTP port
