@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Current Version
-- **ComfyUI**: v0.3.34 (latest release)
+- **ComfyUI**: v0.5.1 (latest release)
 - **Architecture**: Optimized with permission fixes for Docker/Podman compatibility
 
 ## Build Commands

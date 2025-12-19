@@ -87,7 +87,8 @@ RUN pip3 install --no-cache-dir \
     torchaudio
 
 # Setup ComfyUI in /opt (read-only application directory)
-ARG VERSION=v0.3.26
+ARG VERSION
+RUN test -n "$VERSION" || (echo "ERROR: VERSION build argument is required. Usage: docker build --build-arg VERSION=v1.2.3 ." && exit 1)
 RUN set -xe && \
     git clone https://github.com/comfyanonymous/ComfyUI.git /opt/comfyui && \
     cd /opt/comfyui && \
