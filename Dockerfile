@@ -80,6 +80,12 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Install Python packages globally
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
+# Install PyTorch with CUDA support before ComfyUI installation
+RUN pip3 install --no-cache-dir \
+    torch \
+    torchvision \
+    torchaudio
+
 # Setup ComfyUI in /opt (read-only application directory)
 ARG VERSION=v0.3.26
 RUN set -xe && \
