@@ -32,6 +32,7 @@ RUN set -xe && \
         libxrandr-dev \
         mesa-common-dev \
         mesa-utils \
+        nano \
         ninja-build \
         pkg-config \
         python-is-python3 \
@@ -43,7 +44,6 @@ RUN set -xe && \
         rsync \
         software-properties-common \
         unzip \
-        vim \
         wget \
         xauth \
         xvfb && \
@@ -139,7 +139,7 @@ RUN set -xe && \
     git config --global user.name "ComfyUI" && \
     git config --global user.email "comfyui@container.local" && \
     git config --global init.defaultBranch main && \
-    git config --global core.editor "vim" && \
+    git config --global core.editor "nano" && \
     git config --global --add safe.directory "*"
 
 # Expose HTTP port
