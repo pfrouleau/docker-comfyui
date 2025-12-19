@@ -34,12 +34,6 @@ RUN set -xe && \
         mesa-utils \
         ninja-build \
         pkg-config \
-        python-is-python3 \
-        python3 \
-        python3-dev \
-        python3-opencv \
-        python3-pip \
-        python3-psutil \
         rsync \
         software-properties-common \
         unzip \
@@ -47,7 +41,10 @@ RUN set -xe && \
         wget \
         xauth \
         xvfb && \
-    add-apt-repository universe && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt
+
+RUN add-apt-repository universe && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         ffmpeg \
@@ -57,8 +54,23 @@ RUN set -xe && \
         libavformat-dev \
         libavutil-dev \
         libswresample-dev \
-        libswscale-dev \
-        python3-av && \
+        libswscale-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt
+
+# Install Python 3.10 and pip
+RUN set -xe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python-is-python3 \
+        python3 \
+        python3-av \
+        python3-dev \
+        python3-opencv \
+        python3-pip \
+        python3-psutil \
+        python3-setuptools \
+        python3-venv && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
