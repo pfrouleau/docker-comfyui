@@ -16,7 +16,6 @@ A Docker image for running [ComfyUI][ComfyUI] with [ComfyUI Manager][ComfyUIMana
 The following volume mounts are recommended for data persistence:
 - `/data/user`: Contains your workflows and personal workspace settings. Always mount this to preserve your workflows when updating or recreating the container
 - `/data/models`: Model files (checkpoints, VAE, Loras, etc.)
-- `/data/custom_nodes`: Custom nodes and extensions
 - `/data/output`: Generated images and other outputs
 - `/data/input`: Input images and other data
 
@@ -53,7 +52,6 @@ docker run -d --gpus all -p 8188:8188 \
     -v ./models:/data/models \
     -v ./output:/data/output \
     -v ./input:/data/input \
-    -v ./custom_nodes:/data/custom_nodes \
     --name comfyui jamesbrink/comfyui
 ```
 
@@ -65,7 +63,6 @@ docker run -d --gpus all --network=host \
     -v ./models:/data/models \
     -v ./output:/data/output \
     -v ./input:/data/input \
-    -v ./custom_nodes:/data/custom_nodes \
     --name comfyui jamesbrink/comfyui
 ```
 
@@ -75,12 +72,35 @@ This image is fully compatible with Podman and rootless containers:
 
 ```shell
 podman run -d --device nvidia.com/gpu=all -p 8188:8188 \
+    --init \
     -v ./user:/data/user:Z \
     -v ./models:/data/models:Z \
     -v ./output:/data/output:Z \
     -v ./input:/data/input:Z \
-    -v ./custom_nodes:/data/custom_nodes:Z \
     --name comfyui jamesbrink/comfyui
+```
+
+## Simplified usage
+
+Copy `default.env` into `.env` and edit is values to your usage. You can update the versions
+if you want to use newer ones, but you may have to fix the build sequence if there are news
+dependencies. The REPO_ variables can be set different values if you want to have a distinct
+name for the generated container image.
+
+Build the container image as usual:
+
+```shell
+make build
+```
+
+Then use a directory to store all your volumes and copy these files into it:
+- `run.sh`
+
+That script starts the container if one exist, otherwise it create a new container.
+Edit the file if you have modified the image name. 
+
+```shell
+./run.sh
 ```
 
 ### Shared Model Setup
@@ -92,7 +112,6 @@ mkdir -p ~/AI/ComfyUI/user           # Workflows and workspace settings
 mkdir -p ~/AI/Models/StableDiffusion # Shared models
 mkdir -p ~/AI/Output                 # Generated images
 mkdir -p ~/AI/Input                  # Input data
-mkdir -p ~/AI/ComfyUI/custom_nodes   # Custom nodes
 ```
 
 Then run the container with these mapped volumes:
@@ -103,7 +122,6 @@ docker run -d --gpus all --network=host \
     -v ~/AI/Models/StableDiffusion/:/data/models \
     -v ~/AI/Output:/data/output \
     -v ~/AI/Input:/data/input \
-    -v ~/AI/ComfyUI/custom_nodes:/data/custom_nodes \
     --name comfyui jamesbrink/comfyui
 ```
 

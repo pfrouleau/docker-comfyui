@@ -113,7 +113,7 @@ RUN chmod 755 /usr/local/bin/entrypoint.sh
 
 # Create data directories with proper permissions for any user
 RUN set -xe && \
-    mkdir -p /data/{models,output,input,user,custom_nodes} && \
+    mkdir -p /data/user && \
     chmod -R 777 /data && \
     chmod -R 755 /opt/comfyui
 
@@ -136,18 +136,24 @@ ENV \
     PATH="/usr/local/bin:/data/user/.local/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     VERSION="${VERSION}" \
-    COMFYUI_PATH="/opt/comfyui" \
-    DATA_PATH="/data"
+    DATA_PATH="/data" \
+    COMFYUI_PATH="/opt/comfyui"
 
 # Use a high UID that's less likely to conflict
 # This works better with both Docker and Podman user namespace mapping
 ARG USER_ID=10001
 ARG GROUP_ID=10001
 
+ARG COMFYUI_DIRS="input output custom_nodes models temp user"
 RUN set -xe && \
     groupadd -g ${GROUP_ID} comfyui && \
     useradd -u ${USER_ID} -g ${GROUP_ID} -d /data/user -s /bin/bash -m comfyui && \
-    chown -R comfyui:comfyui /data
+    chown -R comfyui:comfyui /data && \
+    for dir in ${COMFYUI_DIRS}; do mkdir -p /opt/comfyui/$dir; done && \
+    chown -R comfyui:comfyui /opt/comfyui && \
+    chmod -R 755 /opt/comfyui && \
+    chmod 777 /opt/comfyui/temp && \
+    ls -l /opt/comfyui/
 
 # Switch to non-root user
 USER comfyui
@@ -165,7 +171,7 @@ RUN set -xe && \
 EXPOSE 8188
 
 # Volumes for data persistence
-VOLUME ["/data/models", "/data/output", "/data/input", "/data/user", "/data/custom_nodes"]
+VOLUME ["/opt/comfyui/input", "/opt/comfyui/output", "/opt/comfyui/models", "/opt/comfyui/user"]
 
 # Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
