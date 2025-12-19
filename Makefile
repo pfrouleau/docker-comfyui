@@ -25,7 +25,8 @@ build:
 		--build-arg VERSION=$(VERSION) \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(VERSION) \
-		--file Dockerfile .; \
+		--security-opt label=disable \
+		--file Dockerfile .;
 
 # Alias for build
 .PHONY: base
