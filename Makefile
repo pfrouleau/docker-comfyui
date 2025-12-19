@@ -20,12 +20,13 @@ default: build
 .PHONY: build
 build:
 	docker build \
+		--security-opt label=disable \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg VERSION=$(VERSION) \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(VERSION) \
-		--file Dockerfile .; \
+		--file Dockerfile .;
 
 # Alias for build
 .PHONY: base
