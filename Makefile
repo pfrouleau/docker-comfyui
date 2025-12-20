@@ -6,10 +6,11 @@ REPO_USERNAME           ?= jamesbrink
 REPO_API_URL            ?= https://hub.docker.com/v2
 IMAGE_NAME              ?= comfyui
 CUDA_VERSION            ?= 13.0.2
-BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-ubuntu24.04
+OS_VERSION              ?= ubuntu24.04
+BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
 SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-VERSION                 := v0.5.1
+COMFY_VERSION           := v0.5.1
 UI_MANAGER_VERSION      ?= main
 
 # Default target is to build container
@@ -22,9 +23,9 @@ build:
 	docker build \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg VERSION=$(VERSION) \
+		--build-arg COMFY_VERSION=$(COMFY_VERSION) \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
-		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(VERSION) \
+		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(COMFY_VERSION) \
 		--security-opt label=disable \
 		--file Dockerfile .;
 
@@ -36,7 +37,7 @@ base: build
 .PHONY: push
 push: build
 	docker push $(REPO_NAMESPACE)/$(IMAGE_NAME):latest; \
-	docker push $(REPO_NAMESPACE)/$(IMAGE_NAME):$(VERSION);
+	docker push $(REPO_NAMESPACE)/$(IMAGE_NAME):$(COMFY_VERSION);
 
 # List built images
 .PHONY: list
@@ -46,7 +47,7 @@ list:
 # Run any tests
 .PHONY: test
 test:
-	docker run --rm --entrypoint="" -t $(REPO_NAMESPACE)/$(IMAGE_NAME) env | grep VERSION | grep $(VERSION)
+	docker run --rm --entrypoint="" -t $(REPO_NAMESPACE)/$(IMAGE_NAME) env | grep COMFY_VERSION | grep $(COMFY_VERSION)
 
 # Remove existing images
 .PHONY: clean
