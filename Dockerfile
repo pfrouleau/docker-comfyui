@@ -157,6 +157,11 @@ RUN set -xe && \
     chmod 777 /opt/comfyui/temp && \
     ls -l /opt/comfyui/
 
+# Set permissions for the virtual environment
+# Comment this out if you want improved security and want to manage packages dependencies yourself
+RUN chown -R comfyui:comfyui /opt/venv && \
+    chmod -R 755 /opt/venv
+
 # Switch to non-root user
 USER comfyui
 WORKDIR /data/user
