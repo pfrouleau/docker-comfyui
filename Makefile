@@ -1,17 +1,35 @@
 #!/usr/bin/make -f
 
 SHELL                   := /usr/bin/env bash
-REPO_NAMESPACE          ?= jamesbrink
-REPO_USERNAME           ?= jamesbrink
+
+# Load environment variables from .env file if it exists
+ifneq (,$(wildcard .env))
+    include .env
+    export $(shell sed 's/=.*//' .env)
+endif
+
+# Function to require a variable
+require = $(if $(strip $($(1))),,$(error Variable $(1) is required but not set. Please set it in .env or environment))
+
+# Required variables using the function
+REQUIRED_VARS := \
+  REPO_NAMESPACE \
+  REPO_USERNAME \
+  REPO_NAME \
+  COMFY_VERSION \
+  CUDA_VERSION \
+  OS_VERSION \
+  CONTAINER_AUTHORS
+
+$(foreach v,$(REQUIRED_VARS),$(call require,$(v)))
+
+# Optional variables with defaults
 REPO_API_URL            ?= https://hub.docker.com/v2
 IMAGE_NAME              ?= comfyui
-CUDA_VERSION            ?= 13.0.2
-OS_VERSION              ?= ubuntu24.04
-BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
+UI_MANAGER_VERSION      ?= main
+BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
 SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-COMFY_VERSION           := v0.5.1
-UI_MANAGER_VERSION      ?= main
 
 # Default target is to build container
 .PHONY: default
@@ -24,6 +42,10 @@ build:
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg COMFY_VERSION=$(COMFY_VERSION) \
+		--build-arg REPO_NAMESPACE=$(REPO_NAMESPACE) \
+		--build-arg REPO_USERNAME=$(REPO_USERNAME) \
+		--build-arg REPO_NAME=$(REPO_NAME) \
+		--build-arg CONTAINER_AUTHORS=$(CONTAINER_AUTHORS) \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(COMFY_VERSION) \
 		--security-opt label=disable \

@@ -1,6 +1,8 @@
 .DS_Store
+*.env
 models
 input
 output
 /build-assets/*
+volumes/
 !/build-assets/.gitkeep

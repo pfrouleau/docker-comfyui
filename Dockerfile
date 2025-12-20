@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:13.0.2-devel-ubuntu24.04
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS base
 
 # Prevent interactive prompts during build
@@ -121,12 +121,12 @@ RUN set -xe && \
 
 # Labels / Metadata
 LABEL \
-    org.opencontainers.image.authors="James Brink <brink.james@gmail.com>" \
+    org.opencontainers.image.authors="${CONTAINER_AUTHORS}" \
     org.opencontainers.image.description="ComfyUI Interface for Stable Diffusion" \
     org.opencontainers.image.revision="1" \
-    org.opencontainers.image.source="https://github.com/jamesbrink/docker-comfyui" \
-    org.opencontainers.image.title="comfyui" \
-    org.opencontainers.image.vendor="jamesbrink" \
+    org.opencontainers.image.source="https://github.com/${REPO_NAMESPACE}/${REPO_NAME}" \
+    org.opencontainers.image.title="${IMAGE_NAME}" \
+    org.opencontainers.image.vendor="${REPO_NAMESPACE}" \
     org.opencontainers.image.version="${COMFY_VERSION}" \
     org.opencontainers.image.created="${BUILD_DATE}"
 
