@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:12.9.1-devel-ubuntu24.04
+ARG BASE_IMAGE=nvidia/cuda:13.0.2-devel-ubuntu24.04
 FROM ${BASE_IMAGE} AS base
 
 # Prevent interactive prompts during build
