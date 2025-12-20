@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:12.6.3-devel-ubuntu22.04
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE} AS base
 
 # Prevent interactive prompts during build
@@ -96,7 +96,6 @@ RUN set -xe && \
     pip3 install --no-cache-dir -r requirements.txt
 
 # Create directories and copy entrypoint
-ARG BUILD_DATE
 COPY ./runtime-assets/usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh
 
@@ -107,13 +106,18 @@ RUN set -xe && \
     chmod -R 755 /opt/comfyui
 
 # Labels / Metadata
+ARG BUILD_DATE
+ARG IMAGE_NAME
+ARG CONTAINER_AUTHORS
+ARG REPO_NAME
+ARG REPO_NAMESPACE
 LABEL \
-    org.opencontainers.image.authors="James Brink <brink.james@gmail.com>" \
+    org.opencontainers.image.authors="${CONTAINER_AUTHORS}" \
     org.opencontainers.image.description="ComfyUI Interface for Stable Diffusion" \
     org.opencontainers.image.revision="1" \
-    org.opencontainers.image.source="https://github.com/jamesbrink/docker-comfyui" \
-    org.opencontainers.image.title="comfyui" \
-    org.opencontainers.image.vendor="jamesbrink" \
+    org.opencontainers.image.source="https://github.com/${REPO_NAMESPACE}/${REPO_NAME}" \
+    org.opencontainers.image.title="${IMAGE_NAME}" \
+    org.opencontainers.image.vendor="${REPO_NAMESPACE}" \
     org.opencontainers.image.version="${COMFYUI_VERSION}" \
     org.opencontainers.image.created="${BUILD_DATE}"
 

@@ -2,17 +2,37 @@
 
 SHELL                   := /usr/bin/env bash
 
-REPO_NAMESPACE          ?= jamesbrink
-REPO_USERNAME           ?= jamesbrink
+# Load environment variables from .env file if it exists, otherwise from default.env
+ifneq (,$(wildcard .env))
+	include .env
+	export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' .env)
+else ifneq (,$(wildcard default.env))
+    include default.env
+    export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' default.env)
+endif
+
+# Function to require a variable
+require = $(if $(strip $($(1))),,$(error Variable $(1) is required but not set. Please set it in .env or environment))
+
+# Required variables using the function
+REQUIRED_VARS := \
+	REPO_NAMESPACE \
+	REPO_USERNAME \
+	REPO_NAME \
+	CUDA_VERSION \
+	OS_VERSION \
+	COMFYUI_VERSION \
+	CONTAINER_AUTHORS \
+	MULTI_USER
+
+$(foreach v,$(strip $(REQUIRED_VARS)),$(call require,$(v)))
+
+# Optional variables with defaults
 REPO_API_URL            ?= https://hub.docker.com/v2
 IMAGE_NAME              ?= comfyui
-CUDA_VERSION            ?= 12.6.3
-OS_VERSION              ?= ubuntu22.04
-COMFYUI_VERSION         ?= v0.3.34
 UI_MANAGER_VERSION      ?= main
-MULTI_USER              ?= false
-BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
 
+BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
 SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -28,6 +48,11 @@ build:
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg COMFYUI_VERSION=$(COMFYUI_VERSION) \
+		--build-arg REPO_NAMESPACE=$(REPO_NAMESPACE) \
+		--build-arg REPO_USERNAME=$(REPO_USERNAME) \
+		--build-arg REPO_NAME=$(REPO_NAME) \
+		--build-arg CONTAINER_AUTHORS=$(CONTAINER_AUTHORS) \
+		--build-arg IMAGE_NAME=$(IMAGE_NAME) \
 		--build-arg MULTI_USER=$(MULTI_USER) \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(COMFYUI_VERSION) \

@@ -7,6 +7,7 @@ A Docker image for running [ComfyUI][ComfyUI] with [ComfyUI Manager][ComfyUIMana
 **Current Version**: ComfyUI v0.3.34 (latest release)
 
 ### Key Features:
+- ✅ **Configuration**: See `default.env` to customize the versions
 - ✅ **Latest ComfyUI**: v0.3.34 with newest dependencies and features
 - ✅ **Permission-Fixed**: Works seamlessly with Docker and rootless Podman
 - ✅ **Easy Updates**: Clean separation of application and user data
