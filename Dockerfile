@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:12.6.3-devel-ubuntu22.04
+ARG BASE_IMAGE=nvidia/cuda:12.9.1-devel-ubuntu24.04
 FROM ${BASE_IMAGE} AS base
 
 # Prevent interactive prompts during build
@@ -17,8 +17,6 @@ RUN set -xe && \
         libbz2-dev \
         libegl1 \
         libgl1 \
-        libgl1-mesa-dev \
-        libgl1-mesa-glx \
         libglib2.0-0 \
         libglu1-mesa-dev \
         libglvnd-dev \
@@ -58,27 +56,31 @@ RUN add-apt-repository universe && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt
 
-# Install Python 3.10 and pip
+# Install Python 3.x and pip
 RUN set -xe && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         python-is-python3 \
         python3 \
-        python3-av \
         python3-dev \
         python3-opencv \
         python3-pip \
         python3-psutil \
         python3-setuptools \
-        python3-venv && \
+        python3-venv \
+        python3-wheel && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/opt/venv/bin:/root/.cargo/bin:${PATH}"
 
-# Install Python packages globally
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
+# Create Python virtual environment
+RUN python3 -m venv /opt/venv
+
+RUN apt-get update && apt-get update && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt
 
 # Install PyTorch with CUDA support before ComfyUI installation
 RUN pip3 install --no-cache-dir \
