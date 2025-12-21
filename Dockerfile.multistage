@@ -1,10 +1,69 @@
 ARG BASE_IMAGE
-FROM ${BASE_IMAGE} AS base
+FROM ${BASE_IMAGE} AS builder
 
 # Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Install build dependencies in builder stage
+RUN set -xe && \
+    apt-get update && \
+    # Install software-properties-common first to get add-apt-repository
+    apt-get install -y --no-install-recommends software-properties-common && \
+    # Now we can add the universe repository
+    add-apt-repository universe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        curl \
+        git \
+        ninja-build \
+        pkg-config \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-venv && \
+    # Install Rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Create Python virtual environment and install packages
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+
+# Install PyTorch and dependencies in builder stage
+RUN pip3 install --no-cache-dir \
+    torch \
+    torchvision \
+    torchaudio
+
+# Setup ComfyUI in builder stage
+ARG COMFY_VERSION
+RUN test -n "$COMFY_VERSION" || (echo "ERROR: COMFY_VERSION build argument is required. Usage: docker build --build-arg COMFY_VERSION=v1.2.3 ." && exit 1)
+RUN set -xe && \
+    git clone --depth=1 --branch=${COMFY_VERSION} https://github.com/comfyanonymous/ComfyUI.git /opt/comfyui && \
+    cd /opt/comfyui && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir comfy-cli && \
+    rm -rf /opt/comfyui/.git
+
+# Setup ComfyUI Manager in builder stage
+ARG UI_MANAGER_VERSION=main
+RUN set -xe && \
+    git clone --depth=1 --branch=${UI_MANAGER_VERSION} https://github.com/ltdrdata/ComfyUI-Manager.git /opt/comfyui/custom_nodes/ComfyUI-Manager && \
+    cd /opt/comfyui/custom_nodes/ComfyUI-Manager && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    rm -rf /opt/comfyui/custom_nodes/ComfyUI-Manager/.git
+
+# Runtime stage - smaller base image with only runtime dependencies
+FROM ${BASE_IMAGE} AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install only runtime dependencies (much smaller set)
 RUN set -xe && \
     apt-get update && \
     # Install software-properties-common first to get add-apt-repository
@@ -14,8 +73,6 @@ RUN set -xe && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         bash-completion \
-        build-essential \
-        cmake \
         curl \
         git \
         iproute2 \
@@ -35,9 +92,8 @@ RUN set -xe && \
         libxrandr-dev \
         mesa-common-dev \
         mesa-utils \
-        ninja-build \
-        pkg-config \
         rsync \
+        software-properties-common \
         unzip \
         wget \
         xauth \
@@ -52,59 +108,18 @@ RUN set -xe && \
         libswscale-dev \
         python-is-python3 \
         python3 \
-        python3-dev \
         python3-opencv \
-        python3-pip \
-        python3-psutil \
-        python3-setuptools \
-        python3-venv \
-        python3-wheel && \
-    # Install Rust in same layer
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    # Clean up in same layer to reduce image size
+        python3-psutil && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* && \
-    # Remove build tools that aren't needed at runtime
-    apt-get remove -y \
-        build-essential \
-        cmake \
-        ninja-build \
-        pkg-config && \
-    apt-get autoremove -y
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/*
 
-ENV PATH="/opt/venv/bin:/root/.cargo/bin:${PATH}"
+# Copy the virtual environment and ComfyUI from builder stage
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /opt/comfyui /opt/comfyui
 
-# Create Python virtual environment
-RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 
-RUN apt-get update && apt-get update && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt
-
-# Install PyTorch with CUDA support before ComfyUI installation
-RUN pip3 install --no-cache-dir \
-    torch \
-    torchvision \
-    torchaudio
-
-# Setup ComfyUI in /opt (read-only application directory)
-ARG COMFY_VERSION
-RUN test -n "$COMFY_VERSION" || (echo "ERROR: COMFY_VERSION build argument is required. Usage: docker build --build-arg COMFY_VERSION=v1.2.3 ." && exit 1)
-RUN set -xe && \
-    git clone --depth=1 --branch=${COMFY_VERSION} https://github.com/comfyanonymous/ComfyUI.git /opt/comfyui && \
-    cd /opt/comfyui && \
-    # Install requirements without cache
-    pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install --no-cache-dir comfy-cli
-
-# Setup ComfyUI Manager with shallow clone
-ARG UI_MANAGER_VERSION=main
-RUN set -xe && \
-    git clone --depth=1 --branch=${UI_MANAGER_VERSION} https://github.com/ltdrdata/ComfyUI-Manager.git /opt/comfyui/custom_nodes/ComfyUI-Manager && \
-    cd /opt/comfyui/custom_nodes/ComfyUI-Manager && \
-    pip3 install --no-cache-dir -r requirements.txt
-
-# Create directories and copy entrypoint
+# Create entrypoint and set permissions
 ARG BUILD_DATE
 COPY ./runtime-assets/usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh
@@ -138,7 +153,6 @@ ENV \
     COMFYUI_PATH="/opt/comfyui"
 
 # Use a high UID that's less likely to conflict
-# This works better with both Docker and Podman user namespace mapping
 ARG USER_ID=10001
 ARG GROUP_ID=10001
 
@@ -154,7 +168,6 @@ RUN set -xe && \
     ls -l /opt/comfyui/
 
 # Set permissions for the virtual environment
-# Comment this out if you want improved security and want to manage packages dependencies yourself
 RUN chown -R comfyui:comfyui /opt/venv && \
     chmod -R 755 /opt/venv
 

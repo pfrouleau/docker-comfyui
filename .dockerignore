@@ -1,10 +1,74 @@
+# Git files
 .git
 .gitignore
+.gitattributes
+
+# Documentation and project files
+*.md
+README.*
+LICENSE
+CHANGELOG.*
+docs/
+documentation/
 Dockerfile
 hooks
-LICENSE
 Makefile
-README.md
-models
-input
-output
+
+# Development and CI files
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+Jenkinsfile
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Runtime directories (these are mounted at runtime)
+models/
+input/
+output/
+volumes/
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Build artifacts
+*.tar
+*.tar.gz
+*.zip
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.env
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Test files
+test/
+tests/
+*_test.*
+
+# Backup files
+*.bak
+*.backup
+
+# Local configuration
+*.local
+local.*
