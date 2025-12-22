@@ -46,10 +46,10 @@ build:
 		--build-arg REPO_USERNAME=$(REPO_USERNAME) \
 		--build-arg REPO_NAME=$(REPO_NAME) \
 		--build-arg CONTAINER_AUTHORS=$(CONTAINER_AUTHORS) \
-		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
-		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(COMFY_VERSION) \
+		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME)-multistaged:latest \
+		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME)-multistaged:$(COMFY_VERSION) \
 		--security-opt label=disable \
-		--file Dockerfile .;
+		--file Dockerfile.multistage .;
 
 # Alias for build
 .PHONY: base
