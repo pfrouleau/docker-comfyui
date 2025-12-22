@@ -25,6 +25,9 @@ REQUIRED_VARS := \
 	CONTAINER_AUTHORS \
 	MULTI_USER
 
+# Print required variables
+$(foreach v,$(strip $(REQUIRED_VARS)),$(info $(v)=$($(v))))
+
 $(foreach v,$(strip $(REQUIRED_VARS)),$(call require,$(v)))
 
 # Optional variables with defaults
@@ -82,3 +85,10 @@ test:
 .PHONY: clean
 clean:
 	docker rmi $$(docker images $(REPO_NAMESPACE)/$(IMAGE_NAME) --format="{{.Repository}}:{{.Tag}}") --force
+
+# Run container in single-user mode (default)
+.PHONY: run
+run:
+	docker run --rm -p 8188:8188 \
+		-e MULTI_USER=$(MULTI_USER) \
+		$(REPO_NAMESPACE)/$(IMAGE_NAME)

@@ -1,8 +1,12 @@
 .DS_Store
 *.env
 !default.env
-models
-input
-output
+.vscode/
 /build-assets/*
 !/build-assets/.gitkeep
+custom_nodes/
+input/
+models/
+output/
+user/
+volumes/

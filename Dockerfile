@@ -18,7 +18,6 @@ RUN set -xe && \
         libegl1 \
         libgl1 \
         libgl1-mesa-dev \
-        libgl1-mesa-glx \
         libglib2.0-0 \
         libglu1-mesa-dev \
         libglvnd-dev \
@@ -39,8 +38,8 @@ RUN set -xe && \
         python3 \
         python3-dev \
         python3-opencv \
-        python3-pip \
         python3-psutil \
+        python3-venv \
         rsync \
         software-properties-common \
         unzip \
@@ -65,35 +64,41 @@ RUN set -xe && \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install Python packages globally
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
+# Create Python virtual environment
+RUN python3 -m venv /opt/venv
+
+ENV PATH="/opt/venv/bin:${PATH}"
+
+# Upgrade pip and setuptools
+RUN python -m pip install --no-cache-dir --upgrade \
+    pip setuptools wheel
 
 # Install PyTorch with CUDA support before ComfyUI installation
-RUN pip3 install --no-cache-dir \
+RUN pip install --no-cache-dir \
     torch \
     torchvision \
     torchaudio
 
-# Setup ComfyUI in /opt (read-only application directory)
+# Setup ComfyUI in /opt
 ARG COMFYUI_VERSION
 RUN test -n "$COMFYUI_VERSION" || \
     (echo "ERROR: COMFYUI_VERSION build argument is required. Usage: docker build --build-arg COMFYUI_VERSION=v0.3.34 ." && exit 1) && \
     set -xe && \
-    git clone https://github.com/comfyanonymous/ComfyUI.git /opt/comfyui && \
-    cd /opt/comfyui && \
-    git fetch --all --tags && \
-    git checkout ${COMFYUI_VERSION} && \
+    WORKDIR=/opt/comfyui && \
+    git clone --depth=1 --branch=${COMFYUI_VERSION} \
+        https://github.com/comfyanonymous/ComfyUI.git $WORKDIR && \
+    cd $WORKDIR && \
     pip3 install --no-cache-dir -r requirements.txt && \
     pip3 install --no-cache-dir comfy-cli
 
 # Setup ComfyUI Manager
 ARG UI_MANAGER_VERSION=main
 RUN set -xe && \
-    git clone https://github.com/ltdrdata/ComfyUI-Manager.git /opt/comfyui/custom_nodes/ComfyUI-Manager && \
-    cd /opt/comfyui/custom_nodes/ComfyUI-Manager && \
-    git fetch --all --tags && \
-    git checkout ${UI_MANAGER_VERSION} && \
-    pip3 install --no-cache-dir -r requirements.txt
+    WORKDIR=/opt/comfyui/custom_nodes/ComfyUI-Manager && \
+    git clone --depth=1 --branch=${UI_MANAGER_VERSION} \
+        https://github.com/ltdrdata/ComfyUI-Manager.git $WORKDIR && \
+    cd $WORKDIR && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Create directories and copy entrypoint
 COPY ./runtime-assets/usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -144,7 +149,12 @@ RUN set -xe && \
     useradd -u ${USER_ID} -g ${GROUP_ID} -d /data/user -s /bin/bash -m comfyui && \
     chown -R comfyui:comfyui /data
 
-# Switch to non-root user
+# Allow comfyui user to manage the virtual environment
+# Comment this out if you want improved security and want to manage packages dependencies yourself
+RUN chown -R comfyui:comfyui /opt/venv && \
+    chmod -R 755 /opt/venv
+
+     # Switch to non-root user
 USER comfyui
 WORKDIR /data/user
 
@@ -154,13 +164,14 @@ RUN set -xe && \
     git config --global user.email "comfyui@container.local" && \
     git config --global init.defaultBranch main && \
     git config --global core.editor "nano" && \
-    git config --global --add safe.directory "*"
+    git config --global --add safe.directory "/opt/comfyui/custom_nodes*" && \
+    git config --global --add safe.directory "$DATA_PATH/*"
 
 # Expose HTTP port
 EXPOSE 8188
 
 # Volumes for data persistence
-VOLUME ["/data/models", "/data/output", "/data/input", "/data/user", "/data/custom_nodes"]
+VOLUME ["/data/models", "/data/output", "/data/input", "/data/user"]
 
 # Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
