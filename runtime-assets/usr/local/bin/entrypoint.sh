@@ -128,8 +128,12 @@ sleep 2
 # Create working directory and setup environment
 create_working_directory
 
-# Setup git safe directories - handle potential permission issues gracefully
-git config --global --add safe.directory "*" 2>/dev/null || true
+# Setup git safe directories for specific paths used by this container
+# Clear any existing safe.directory settings and set our specific ones
+git config --global --unset-all safe.directory 2>/dev/null || true
+# then add the ones we need.
+git config --global --add safe.directory "${WORKING_DIR}"
+git config --global --add safe.directory "${DATA_PATH}/*"
 
 # Display connection information
 show_connection_info
