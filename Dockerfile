@@ -116,6 +116,7 @@ LABEL \
     org.opencontainers.image.created="${BUILD_DATE}"
 
 # Environment variables
+ARG MULTI_USER=false
 ENV \
     DISPLAY=:99 \
     HOME="/data/user" \
@@ -124,6 +125,7 @@ ENV \
     PYTHONUNBUFFERED=1 \
     VERSION="${VERSION}" \
     COMFYUI_PATH="/opt/comfyui" \
+    MULTI_USER="${MULTI_USER}" \
     DATA_PATH="/data"
 
 # Use a high UID that's less likely to conflict
@@ -158,4 +160,4 @@ VOLUME ["/data/models", "/data/output", "/data/input", "/data/user", "/data/cust
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Default command arguments
-CMD ["--listen", "--port", "8188", "--preview-method", "auto", "--multi-user"]
+CMD ["--listen", "--port", "8188", "--preview-method", "auto"]

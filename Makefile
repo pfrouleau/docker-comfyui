@@ -11,6 +11,7 @@ SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo 
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 VERSION                 := v0.3.34
 UI_MANAGER_VERSION      ?= main
+MULTI_USER              ?= false
 
 # Default target is to build container
 .PHONY: default
@@ -24,6 +25,7 @@ build:
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg VERSION=$(VERSION) \
+		--build-arg MULTI_USER=$(MULTI_USER) \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):latest \
 		--tag $(REPO_NAMESPACE)/$(IMAGE_NAME):$(VERSION) \
 		--file Dockerfile .;

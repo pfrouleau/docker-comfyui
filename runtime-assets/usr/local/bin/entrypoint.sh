@@ -145,11 +145,12 @@ echo "Setting up custom nodes..."
 setup_custom_nodes
 
 # Determine startup flags
-if [ $# -eq 0 ]; then
-    flags="--listen --port 8188 --preview-method auto --multi-user"
-    echo "Starting ComfyUI with default flags: $flags"
-    exec python3 main.py $flags
-else
-    echo "Starting ComfyUI with custom flags: $*"
-    exec python3 main.py "$@"
+flags="$@"
+# Add multi-user flag if enabled
+if [ "${MULTI_USER:-false}" = "true" ]; then
+    flags="$flags --multi-user"
+    echo "Multi-user mode enabled"
 fi
+
+echo "Starting ComfyUI with custom flags: $flags"
+exec python3 main.py $flags
