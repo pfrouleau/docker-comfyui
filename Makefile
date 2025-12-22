@@ -1,17 +1,20 @@
 #!/usr/bin/make -f
 
 SHELL                   := /usr/bin/env bash
+
 REPO_NAMESPACE          ?= jamesbrink
 REPO_USERNAME           ?= jamesbrink
 REPO_API_URL            ?= https://hub.docker.com/v2
 IMAGE_NAME              ?= comfyui
 CUDA_VERSION            ?= 12.6.3
-BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-ubuntu22.04
-SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
-BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+OS_VERSION              ?= ubuntu22.04
 COMFYUI_VERSION         ?= v0.3.34
 UI_MANAGER_VERSION      ?= main
 MULTI_USER              ?= false
+BASE_IMAGE              ?= nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
+
+SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
+BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Default target is to build container
 .PHONY: default
