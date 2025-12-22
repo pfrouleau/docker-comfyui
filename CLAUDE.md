@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make push` - Build and push Docker image to Docker Hub
 
 ## Test Commands
-- `make test` - Verify Docker image via VERSION env variable
+- `make test` - Verify Docker image via COMFYUI_VERSION env variable
 - `make list` - List all built Docker images
 - `make clean` - Remove all built Docker images
 

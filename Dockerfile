@@ -75,12 +75,14 @@ RUN pip3 install --no-cache-dir \
     torchaudio
 
 # Setup ComfyUI in /opt (read-only application directory)
-ARG VERSION=v0.3.26
-RUN set -xe && \
+ARG COMFYUI_VERSION
+RUN test -n "$COMFYUI_VERSION" || \
+    (echo "ERROR: COMFYUI_VERSION build argument is required. Usage: docker build --build-arg COMFYUI_VERSION=v0.3.34 ." && exit 1) && \
+    set -xe && \
     git clone https://github.com/comfyanonymous/ComfyUI.git /opt/comfyui && \
     cd /opt/comfyui && \
     git fetch --all --tags && \
-    git checkout ${VERSION} && \
+    git checkout ${COMFYUI_VERSION} && \
     pip3 install --no-cache-dir -r requirements.txt && \
     pip3 install --no-cache-dir comfy-cli
 
@@ -112,7 +114,7 @@ LABEL \
     org.opencontainers.image.source="https://github.com/jamesbrink/docker-comfyui" \
     org.opencontainers.image.title="comfyui" \
     org.opencontainers.image.vendor="jamesbrink" \
-    org.opencontainers.image.version="${VERSION}" \
+    org.opencontainers.image.version="${COMFYUI_VERSION}" \
     org.opencontainers.image.created="${BUILD_DATE}"
 
 # Environment variables
@@ -123,7 +125,7 @@ ENV \
     NVIDIA_DRIVER_CAPABILITIES=all \
     PATH="/usr/local/bin:/data/user/.local/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    VERSION="${VERSION}" \
+    COMFYUI_VERSION="${COMFYUI_VERSION}" \
     COMFYUI_PATH="/opt/comfyui" \
     MULTI_USER="${MULTI_USER}" \
     DATA_PATH="/data"
