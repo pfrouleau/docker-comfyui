@@ -137,9 +137,9 @@ cd "$WORKING_DIR"
 # Setup ComfyUI CLI tools
 setup_comfy_cli
 
-# Setup custom nodes
-echo "Setting up custom nodes..."
-setup_custom_nodes
+# # Setup custom nodes
+# echo "Setting up custom nodes..."
+# setup_custom_nodes
 
 # Determine startup flags
 flags="$@"
