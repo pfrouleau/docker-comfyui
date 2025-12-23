@@ -64,7 +64,24 @@ RUN set -xe && \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Create Python virtual environment
+# Copy entrypoint
+COPY ./runtime-assets/usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/entrypoint.sh
+
+# Create comfyui user early for proper ownership of installed files
+ARG USER_ID=10001
+ARG GROUP_ID=10001
+
+RUN set -xe && \
+    groupadd -g ${GROUP_ID} comfyui && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} -d /data/user -s /bin/bash -m comfyui && \
+    mkdir -p /data/models /data/output /data/input /data/user /data/custom_nodes /opt/comfyui /opt/venv && \
+    chown -R comfyui:comfyui /data /opt/comfyui /opt/venv
+
+# Switch to comfyui user for all installations
+USER comfyui
+
+# Create Python virtual environment as comfyui user
 RUN python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:${PATH}"
@@ -100,16 +117,6 @@ RUN set -xe && \
     cd $WORKDIR && \
     pip install --no-cache-dir -r requirements.txt
 
-# Create directories and copy entrypoint
-COPY ./runtime-assets/usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod 755 /usr/local/bin/entrypoint.sh
-
-# Create data directories with proper permissions for any user
-RUN set -xe && \
-    mkdir -p /data/{models,output,input,user,custom_nodes} && \
-    chmod -R 777 /data && \
-    chmod -R 755 /opt/comfyui
-
 # Labels / Metadata
 ARG BUILD_DATE
 ARG IMAGE_NAME
@@ -139,22 +146,7 @@ ENV \
     MULTI_USER="${MULTI_USER}" \
     DATA_PATH="/data"
 
-# Use a high UID that's less likely to conflict
-# This works better with both Docker and Podman user namespace mapping
-ARG USER_ID=10001
-ARG GROUP_ID=10001
-
-RUN set -xe && \
-    groupadd -g ${GROUP_ID} comfyui && \
-    useradd -u ${USER_ID} -g ${GROUP_ID} -d /data/user -s /bin/bash -m comfyui && \
-    chown -R comfyui:comfyui /data
-
-# Allow comfyui user to manage the virtual environment
-# Comment this out if you want improved security and want to manage packages dependencies yourself
-RUN chown -R comfyui:comfyui /opt/venv && \
-    chmod -R 755 /opt/venv
-
-     # Switch to non-root user
+# Switch to non-root user for final setup and execution
 USER comfyui
 WORKDIR /data/user
 
