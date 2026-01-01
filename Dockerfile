@@ -127,10 +127,12 @@ RUN test -n "$COMFYUI_VERSION" || \
     pip3 install --no-cache-dir comfy-cli && \
     echo "N" | comfy tracking disable 2>/dev/null
 
+ENV COMFYUI_PATH="/opt/comfyui"
+
 # Setup ComfyUI Manager
 ARG UI_MANAGER_VERSION=main
 RUN set -xe && \
-    WORKDIR=/opt/comfyui/custom_nodes/ComfyUI-Manager && \
+    WORKDIR=$COMFYUI_PATH/custom_nodes/ComfyUI-Manager && \
     git clone --depth=1 --branch=${UI_MANAGER_VERSION} \
         https://github.com/ltdrdata/ComfyUI-Manager.git $WORKDIR && \
     cd $WORKDIR && \
