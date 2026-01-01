@@ -106,10 +106,57 @@ setup_comfy_cli() {
     # Install completion if possible
     comfy --install-completion 2>/dev/null || true
     
-    # Install some useful custom nodes
-    echo "Installing recommended custom nodes..."
-    comfy node install --mode remote ComfyUI-Crystools ComfyUI-Custom-Scripts 2>/dev/null || \
-        echo "Note: Some custom nodes could not be installed automatically"
+    # # Install some useful custom nodes
+    # echo "Installing recommended custom nodes..."
+    # comfy node install --mode remote ComfyUI-Crystools ComfyUI-Custom-Scripts 2>/dev/null || \
+    #     echo "Note: Some custom nodes could not be installed automatically"
+}
+
+install_custom_nodes() {
+
+    # --- Prepare custom nodes ---
+    CN_DIR="$COMFYUI_PATH/custom_nodes"
+    INIT_MARKER="$CN_DIR/.custom_nodes_initialized"
+
+    declare -A REPOS=(
+    #["ComfyUI-Manager"]="https://github.com/ltdrdata/ComfyUI-Manager.git"
+    ["rgthree-comfy"]="https://github.com/rgthree/rgthree-comfy.git"
+    ["ComfyUI-Custom-Scripts"]="https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git"
+    ["ComfyUI-Crystools"]="https://github.com/crystian/ComfyUI-Crystools.git"
+    ["ComfyUI_essentials"]="https://github.com/cubiq/ComfyUI_essentials.git"
+    ["ComfyUI-KJNodes"]="https://github.com/kijai/ComfyUI-KJNodes.git"
+    ["ComfyUI-QwenVL"]="https://github.com/1038lab/ComfyUI-QwenVL.git"
+    ["ComfyUI_UltimateSDUpscale"]="https://github.com/ssitu/ComfyUI_UltimateSDUpscale.git"
+    )
+
+    if [ -f "$INIT_MARKER" ]; then
+        echo "↳ Custom nodes already initialized, skipping clone and dependency installation."
+    else
+        echo "↳ First run: initializing custom_nodes…"
+        mkdir -p "$CN_DIR"
+        for name in "${!REPOS[@]}"; do
+            url="${REPOS[$name]}"
+            target="$CN_DIR/$name"
+            if [ -d "$target" ]; then
+            echo "  ↳ $name already exists, skipping clone"
+            else
+            echo "  ↳ Cloning $name"
+            git clone --depth 1 "$url" "$target"
+            fi
+        done
+
+        echo "↳ Installing/upgrading dependencies…"
+        for dir in "$CN_DIR"/*/; do
+            req="$dir/requirements.txt"
+            if [ -f "$req" ]; then
+            echo "  ↳ pip install --upgrade -r $req"
+            python -m pip install --no-cache-dir --upgrade -r "$req"
+            fi
+        done
+
+        # Create marker file
+        touch "$INIT_MARKER"
+    fi
 }
 
 # Main execution
@@ -140,6 +187,7 @@ setup_comfy_cli
 # # Setup custom nodes
 # echo "Setting up custom nodes..."
 # setup_custom_nodes
+install_custom_nodes
 
 # Determine startup flags
 flags="$@"

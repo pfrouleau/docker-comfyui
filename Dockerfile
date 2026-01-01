@@ -106,7 +106,8 @@ RUN test -n "$COMFYUI_VERSION" || \
         https://github.com/comfyanonymous/ComfyUI.git $WORKDIR && \
     cd $WORKDIR && \
     pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install --no-cache-dir comfy-cli
+    pip3 install --no-cache-dir comfy-cli && \
+    echo "N" | comfy tracking disable 2>/dev/null
 
 # Setup ComfyUI Manager
 ARG UI_MANAGER_VERSION=main
@@ -116,6 +117,18 @@ RUN set -xe && \
         https://github.com/ltdrdata/ComfyUI-Manager.git $WORKDIR && \
     cd $WORKDIR && \
     pip install --no-cache-dir -r requirements.txt
+
+# COPY ./custom_nodes.lst /opt/comfyui/
+#
+# RUN set -xe && \
+#     cd /opt/comfyui && \
+#     echo "N" | comfy tracking disable 2>/dev/null && \
+#     grep -v '^\s*#' /opt/comfyui/custom_nodes.lst | grep -v '^\s*$' | \
+#     while read N ; do \
+#         echo "Adding custom node from: $N" ; \
+#         comfy node install --mode remote "$N" ; \
+#     done && \
+#     rm /opt/comfyui/custom_nodes.lst
 
 # Labels / Metadata
 ARG BUILD_DATE
