@@ -123,20 +123,12 @@ RUN test -n "$COMFYUI_VERSION" || \
     git clone --depth=1 --branch=${COMFYUI_VERSION} \
         https://github.com/comfyanonymous/ComfyUI.git $WORKDIR && \
     cd $WORKDIR && \
-    pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install --no-cache-dir comfy-cli && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r manager_requirements.txt && \
+    pip install --no-cache-dir comfy-cli && \
     echo "N" | comfy tracking disable 2>/dev/null
 
 ENV COMFYUI_PATH="/opt/comfyui"
-
-# Setup ComfyUI Manager
-ARG UI_MANAGER_VERSION=main
-RUN set -xe && \
-    WORKDIR=$COMFYUI_PATH/custom_nodes/ComfyUI-Manager && \
-    git clone --depth=1 --branch=${UI_MANAGER_VERSION} \
-        https://github.com/ltdrdata/ComfyUI-Manager.git $WORKDIR && \
-    cd $WORKDIR && \
-    pip install --no-cache-dir -r requirements.txt
 
 # COPY ./custom_nodes.lst /opt/comfyui/
 #
@@ -202,4 +194,4 @@ VOLUME ["/data/models", "/data/output", "/data/input", "/data/user"]
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Default command arguments
-CMD ["--listen", "--port", "8188", "--preview-method", "auto"]
+CMD ["--enable-manager", "--listen", "--port", "8188", "--preview-method", "auto"]
