@@ -96,6 +96,24 @@ RUN pip install --no-cache-dir \
     torchvision \
     torchaudio
 
+# Install dependencies for flash-attn and other packages
+RUN pip install --no-cache-dir \
+    packaging \
+    psutil \
+    ninja
+
+# Install flash-attn for optimized attention computation
+RUN pip install --no-cache-dir --no-build-isolation flash-attn
+
+# Install additional dependencies for QwenVL flash attention support
+RUN pip install --no-cache-dir \
+    accelerate \
+    einops \
+    "transformers>=4.37.0"
+
+# Install SageAttention for memory-efficient attention
+RUN pip install --no-cache-dir sageattention
+
 # Setup ComfyUI in /opt
 ARG COMFYUI_VERSION
 RUN test -n "$COMFYUI_VERSION" || \
