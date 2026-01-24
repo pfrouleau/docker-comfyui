@@ -109,7 +109,7 @@ RUN pip install --no-cache-dir --no-build-isolation flash-attn
 RUN pip install --no-cache-dir \
     accelerate \
     einops \
-    "transformers>=4.37.0"
+    "transformers>=4.50.3"
 
 # Install SageAttention for memory-efficient attention
 RUN pip install --no-cache-dir sageattention
