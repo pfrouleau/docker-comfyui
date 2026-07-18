@@ -91,5 +91,10 @@ clean:
 .PHONY: run
 run:
 	docker run --rm -p 8188:8188 \
+		--gpus all \
+		--shm-size=8g \
+		--ipc=host \
+		--ulimit memlock=-1 \
+		--ulimit stack=67108864 \
 		-e MULTI_USER=$(MULTI_USER) \
 		$(REPO_NAMESPACE)/$(IMAGE_NAME)

@@ -21,6 +21,8 @@ The following volume mounts are recommended for data persistence:
 - `/data/output`: Generated images and other outputs
 - `/data/input`: Input images and other data
 
+For RTX 4060/4070-class GPUs, the extra runtime flags shown below are especially helpful for smoother ComfyUI performance and more reliable memory handling.
+
 The `/data/user` volume is particularly important as it stores your workflow files (`.json`), ensuring you don't lose your work when updating ComfyUI or rebuilding the container. Other volumes like `models`, `input`, and `output` can be shared between different AI tools for a more integrated setup.
 
 ## Updates and Upgrades
@@ -50,6 +52,10 @@ Build and run the container:
 ```shell
 make build
 docker run -d --gpus all -p 8188:8188 \
+    --shm-size=8g \
+    --ipc=host \
+    --ulimit memlock=-1 \
+    --ulimit stack=67108864 \
     -v ./user:/data/user \
     -v ./models:/data/models \
     -v ./output:/data/output \
