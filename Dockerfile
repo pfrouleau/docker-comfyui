@@ -91,9 +91,9 @@ RUN python -m pip install --no-cache-dir --upgrade \
     pip setuptools wheel
 
 # Pin the PyTorch stack explicitly to improve GPU compatibility and reduce drift
-ARG TORCH_VERSION=2.9.0
-ARG TORCHVISION_VERSION=0.24.0
-ARG TORCHAUDIO_VERSION=2.9.0
+ARG TORCH_VERSION=2.10.0
+ARG TORCHVISION_VERSION=0.25.0
+ARG TORCHAUDIO_VERSION=2.10.0
 ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu130
 ARG XFORMERS_VERSION=
 
