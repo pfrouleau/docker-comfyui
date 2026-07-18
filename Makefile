@@ -36,7 +36,7 @@ IMAGE_NAME              ?= comfyui
 UI_MANAGER_VERSION      ?= main
 
 #BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
-BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-cudnn-devel-$(OS_VERSION)
+BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
 SED                     := $(shell [[ `command -v gsed` ]] && echo gsed || echo sed)
 BUILD_DATE              := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
