@@ -116,10 +116,13 @@ RUN pip install --no-cache-dir \
     psutil \
     ninja
 
-# Install flash-attn for optimized attention computation (with fallback)
-RUN pip install --no-cache-dir --no-build-isolation flash-attn || \
-    pip install --no-cache-dir flash-attn --find-links https://github.com/Dao-AILab/flash-attention/releases || \
-    echo "⚠️  Warning: flash-attn installation failed, continuing without it"
+# Install flash-attn only when a compatible wheel is available; otherwise skip it.
+RUN set -xe && \
+    if pip install --no-cache-dir --disable-pip-version-check --no-build-isolation flash-attn; then \
+        echo "flash-attn installed successfully"; \
+    else \
+        echo "⚠️  Warning: flash-attn installation failed or is unsupported for this torch/CUDA combination; continuing without it"; \
+    fi
 
 # Install optional xformers support when available for better attention performance
 RUN set -xe && \
@@ -135,6 +138,17 @@ RUN pip install --no-cache-dir \
     einops \
     llama-cpp-python \
     "transformers>=4.50.3"
+
+# Install additional dependencies for ComfyUI-manager
+RUN pip install --no-cache-dir \
+    deepdiff \
+    matrix-nio
+
+# Install additional dependencies for Crystools
+RUN pip install --no-cache-dir \
+    piexif \
+    py-cpuinfo \
+    pynvml
 
 # Install SageAttention for memory-efficient attention
 RUN pip install --no-cache-dir sageattention

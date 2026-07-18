@@ -145,14 +145,19 @@ install_custom_nodes() {
             fi
         done
 
-        echo "↳ Installing/upgrading dependencies…"
-        for dir in "$CN_DIR"/*/; do
-            req="$dir/requirements.txt"
-            if [ -f "$req" ]; then
-            echo "  ↳ pip install --upgrade -r $req"
-            python -m pip install --no-cache-dir --upgrade -r "$req"
-            fi
-        done
+        if [ "${COMFYUI_SKIP_CUSTOM_NODE_DEPS:-true}" = "true" ]; then
+            echo "↳ Skipping custom node dependency installation to preserve the base PyTorch/CUDA stack."
+            echo "  ↳ Set COMFYUI_SKIP_CUSTOM_NODE_DEPS=false to enable this step if needed."
+        else
+            echo "↳ Installing/upgrading dependencies…"
+            for dir in "$CN_DIR"/*/; do
+                req="$dir/requirements.txt"
+                if [ -f "$req" ]; then
+                    echo "  ↳ pip install --upgrade -r $req"
+                    python -m pip install --no-cache-dir --upgrade -r "$req"
+                fi
+            done
+        fi
 
         # Create marker file
         touch "$INIT_MARKER"
@@ -198,4 +203,5 @@ if [ "${MULTI_USER:-false}" = "true" ]; then
 fi
 
 echo "Starting ComfyUI with custom flags: $flags"
+python3 -m pip install --user --no-cache-dir py-cpuinfo >/dev/null 2>&1 || true
 exec python3 main.py $flags
