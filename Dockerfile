@@ -90,11 +90,25 @@ ENV PATH="/opt/venv/bin:${PATH}"
 RUN python -m pip install --no-cache-dir --upgrade \
     pip setuptools wheel
 
-# Install PyTorch with CUDA support before ComfyUI installation
-RUN pip install --no-cache-dir \
-    torch \
-    torchvision \
-    torchaudio
+# Pin the PyTorch stack explicitly to improve GPU compatibility and reduce drift
+ARG TORCH_VERSION=2.5.1
+ARG TORCHVISION_VERSION=0.20.1
+ARG TORCHAUDIO_VERSION=2.5.1
+ARG PYTORCH_INDEX_URL=
+ARG XFORMERS_VERSION=
+
+RUN set -xe && \
+    if [ -n "${PYTORCH_INDEX_URL}" ]; then \
+        python -m pip install --no-cache-dir --index-url "${PYTORCH_INDEX_URL}" \
+            "torch==${TORCH_VERSION}" \
+            "torchvision==${TORCHVISION_VERSION}" \
+            "torchaudio==${TORCHAUDIO_VERSION}"; \
+    else \
+        python -m pip install --no-cache-dir \
+            "torch==${TORCH_VERSION}" \
+            "torchvision==${TORCHVISION_VERSION}" \
+            "torchaudio==${TORCHAUDIO_VERSION}"; \
+    fi
 
 # Install dependencies for flash-attn and other packages
 RUN pip install --no-cache-dir \
@@ -106,6 +120,14 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir --no-build-isolation flash-attn || \
     pip install --no-cache-dir flash-attn --find-links https://github.com/Dao-AILab/flash-attention/releases || \
     echo "⚠️  Warning: flash-attn installation failed, continuing without it"
+
+# Install optional xformers support when available for better attention performance
+RUN set -xe && \
+    if [ -n "${XFORMERS_VERSION}" ]; then \
+        pip install --no-cache-dir "xformers==${XFORMERS_VERSION}" || true; \
+    else \
+        pip install --no-cache-dir xformers || true; \
+    fi
 
 # Install additional dependencies for QwenVL flash attention support
 RUN pip install --no-cache-dir \
@@ -164,11 +186,16 @@ LABEL \
 # Environment variables
 ARG MULTI_USER=false
 ENV \
+    CUDA_DEVICE_ORDER=PCI_BUS_ID \
     DISPLAY=:99 \
     HOME="/data/user" \
+    MKL_NUM_THREADS=8 \
     NVIDIA_DRIVER_CAPABILITIES=all \
+    NVIDIA_VISIBLE_DEVICES=all \
+    OMP_NUM_THREADS=8 \
     PATH="/usr/local/bin:/data/user/.local/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
+    PYTORCH_CUDA_ALLOC_CONF="garbage_collection_threshold:0.6,max_split_size_mb:128" \
     COMFYUI_VERSION="${COMFYUI_VERSION}" \
     COMFYUI_PATH="/opt/comfyui" \
     MULTI_USER="${MULTI_USER}" \
