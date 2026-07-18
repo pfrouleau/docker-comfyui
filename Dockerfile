@@ -102,13 +102,16 @@ RUN pip install --no-cache-dir \
     psutil \
     ninja
 
-# Install flash-attn for optimized attention computation
-RUN pip install --no-cache-dir --no-build-isolation flash-attn
+# Install flash-attn for optimized attention computation (with fallback)
+RUN pip install --no-cache-dir --no-build-isolation flash-attn || \
+    pip install --no-cache-dir flash-attn --find-links https://github.com/Dao-AILab/flash-attention/releases || \
+    echo "⚠️  Warning: flash-attn installation failed, continuing without it"
 
 # Install additional dependencies for QwenVL flash attention support
 RUN pip install --no-cache-dir \
     accelerate \
     einops \
+    llama-cpp-python \
     "transformers>=4.50.3"
 
 # Install SageAttention for memory-efficient attention
