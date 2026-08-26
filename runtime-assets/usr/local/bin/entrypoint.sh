@@ -196,6 +196,15 @@ install_custom_nodes
 
 # Determine startup flags
 flags="$@"
+
+# Support opt-in environment overrides for memory/VRAM tuning.
+# This keeps defaults conservative while allowing advanced users to add
+# compatibility flags for low-memory or RAM-heavy workloads.
+if [ -n "${COMFYUI_EXTRA_ARGS:-}" ]; then
+    echo "Appending COMFYUI_EXTRA_ARGS: ${COMFYUI_EXTRA_ARGS}"
+    flags="$flags ${COMFYUI_EXTRA_ARGS}"
+fi
+
 # Add multi-user flag if enabled
 if [ "${MULTI_USER:-false}" = "true" ]; then
     flags="$flags --multi-user"

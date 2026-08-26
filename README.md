@@ -25,6 +25,23 @@ For RTX 4060/4070-class GPUs, the extra runtime flags shown below are especially
 
 The `/data/user` volume is particularly important as it stores your workflow files (`.json`), ensuring you don't lose your work when updating ComfyUI or rebuilding the container. Other volumes like `models`, `input`, and `output` can be shared between different AI tools for a more integrated setup.
 
+### Optional memory tuning
+
+This image keeps the default startup profile conservative. If you want to add extra ComfyUI launch flags for a specific memory/VRAM profile, set `COMFYUI_EXTRA_ARGS` when starting the container, for example:
+
+```shell
+docker run -d --gpus all -p 8188:8188 \
+    -e COMFYUI_EXTRA_ARGS="--disable-cuda-malloc" \
+    -v ./user:/data/user \
+    -v ./models:/data/models \
+    -v ./output:/data/output \
+    -v ./input:/data/input \
+    -v ./custom_nodes:/data/custom_nodes \
+    --name comfyui jamesbrink/comfyui
+```
+
+This is intentionally opt-in so the default behavior stays stable and compatible.
+
 ## Updates and Upgrades
 
 This container implements a clean separation between the ComfyUI application (in `/opt/comfyui`) and user data (in `/data`). To update ComfyUI:
