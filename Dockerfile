@@ -127,13 +127,18 @@ RUN set -xe && \
         echo "⚠️  Warning: flash-attn installation failed or is unsupported for this torch/CUDA combination; continuing without it"; \
     fi
 
-# Install optional xformers support when available for better attention performance
+# Install optional xformers support by building from source so it links
+# against the installed PyTorch/CUDA in this image (avoids prebuilt wheel
+# ABI mismatches across torch/cuda/python versions).
 RUN set -xe && \
+    pip uninstall -y xformers || true && \
     if [ -n "${XFORMERS_VERSION}" ]; then \
-        pip install --no-cache-dir "xformers==${XFORMERS_VERSION}" || true; \
+        XFORMERS_REF="@${XFORMERS_VERSION}"; \
     else \
-        pip install --no-cache-dir xformers || true; \
-    fi
+        XFORMERS_REF=""; \
+    fi && \
+    python -m pip install --no-cache-dir --no-build-isolation --no-binary :all: \
+        "git+https://github.com/facebookresearch/xformers${XFORMERS_REF}" || true
 
 # Install additional dependencies for QwenVL flash attention support
 RUN pip install --no-cache-dir \
