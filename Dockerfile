@@ -93,6 +93,8 @@ ENV CUDA_HOME=/usr/local/cuda
 RUN python -m pip install --no-cache-dir --upgrade \
     pip setuptools wheel
 
+RUN which python && python --version && which pip && pip --version
+
 # Pin the PyTorch stack explicitly to improve GPU compatibility and reduce drift
 ARG TORCH_VERSION=2.10.0
 ARG TORCHVISION_VERSION=0.25.0
@@ -110,7 +112,7 @@ RUN set -xe && \
     else \
         PYTORCH_URL_ARG=""; \
     fi && \
-    python -m pip install --no-cache-dir ${PYTORCH_URL_ARG} \
+    pip install --no-cache-dir ${PYTORCH_URL_ARG} \
         "torch==${TORCH_VERSION}" \
         "torchvision==${TORCHVISION_VERSION}" \
         "torchaudio==${TORCHAUDIO_VERSION}"
@@ -139,7 +141,7 @@ RUN set -xe && \
     else \
         XFORMERS_REF=""; \
     fi && \
-    python -m pip install --no-cache-dir --no-build-isolation --no-binary :all: \
+    pip install --no-cache-dir --no-build-isolation --no-binary :all: \
         "git+https://github.com/facebookresearch/xformers${XFORMERS_REF}" || \
         echo "⚠️  Warning: xformers installation failed; continuing without xformers"
 
