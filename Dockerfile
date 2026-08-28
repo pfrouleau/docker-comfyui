@@ -106,16 +106,14 @@ ENV TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}
 
 RUN set -xe && \
     if [ -n "${PYTORCH_INDEX_URL}" ]; then \
-        python -m pip install --no-cache-dir --index-url "${PYTORCH_INDEX_URL}" \
-            "torch==${TORCH_VERSION}" \
-            "torchvision==${TORCHVISION_VERSION}" \
-            "torchaudio==${TORCHAUDIO_VERSION}"; \
+        PYTORCH_URL_ARG="--index-url ${PYTORCH_INDEX_URL}"; \
     else \
-        python -m pip install --no-cache-dir \
-            "torch==${TORCH_VERSION}" \
-            "torchvision==${TORCHVISION_VERSION}" \
-            "torchaudio==${TORCHAUDIO_VERSION}"; \
-    fi
+        PYTORCH_URL_ARG=""; \
+    fi && \
+    python -m pip install --no-cache-dir ${PYTORCH_URL_ARG} \
+        "torch==${TORCH_VERSION}" \
+        "torchvision==${TORCHVISION_VERSION}" \
+        "torchaudio==${TORCHAUDIO_VERSION}"
 
 # Install dependencies for flash-attn and other packages
 RUN pip install --no-cache-dir \
