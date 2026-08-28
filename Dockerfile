@@ -86,6 +86,9 @@ RUN python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:${PATH}"
 
+# Set CUDA home path once (assumes CUDA is provided by the base image)
+ENV CUDA_HOME=/usr/local/cuda
+
 # Upgrade pip and setuptools
 RUN python -m pip install --no-cache-dir --upgrade \
     pip setuptools wheel
@@ -162,10 +165,9 @@ RUN pip install --no-cache-dir \
 # sm_95 = Blackwell (RTX 5090, 5080, 5070 Ti, etc.)
 RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
     && cd /tmp/SageAttention \
-    && git checkout v2.2.0 \
-    && CUDA_HOME=/usr/local/cuda \
-       TORCH_CUDA_ARCH_LIST='8.9' \
-       pip install --no-cache-dir --no-build-isolation . \
+     && git checkout v2.2.0 \
+     && TORCH_CUDA_ARCH_LIST='8.9' \
+         pip install --no-cache-dir --no-build-isolation . \
     && cd /tmp \
     && rm -rf /tmp/SageAttention
 
