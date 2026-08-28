@@ -150,8 +150,23 @@ RUN pip install --no-cache-dir \
     py-cpuinfo \
     pynvml
 
-# Install SageAttention for memory-efficient attention
-RUN pip install --no-cache-dir sageattention
+# Install SageAttention for memory-efficient attention (built with CUDA support)
+# Set environment variables to ensure CUDA kernels are compiled
+# sm_60 = Pascal (GTX 1xxx, Quadro)
+# sm_70 = Volta (V100)
+# sm_75 = Turing (RTX 20xx, RTX Super)
+# sm_80 = Ampere (RTX 30xx, A100)
+# sm_86 = Ampere (RTX 30xx refresh)
+# sm_89 = Ada (RTX 40xx except 4090)
+# sm_90 = Ada (RTX 4090)
+# sm_95 = Blackwell (RTX 5090, 5080, 5070 Ti, etc.)
+RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
+    && cd /tmp/SageAttention \
+    && git checkout v2.2.0 \
+    && CUDA_HOME=/usr/local/cuda \
+       TORCH_CUDA_ARCH_LIST='8.9' \
+       pip install --no-cache-dir --no-build-isolation . \
+    && rm -rf /tmp/SageAttention
 
 # Setup ComfyUI in /opt
 ARG COMFYUI_VERSION
