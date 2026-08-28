@@ -215,6 +215,7 @@ LABEL \
 
 # Environment variables
 ARG MULTI_USER=false
+ARG COMFYUI_CACHE_RAM=16
 ENV \
     CUDA_DEVICE_ORDER=PCI_BUS_ID \
     DISPLAY=:99 \
@@ -228,6 +229,7 @@ ENV \
     PYTORCH_CUDA_ALLOC_CONF="garbage_collection_threshold:0.6,max_split_size_mb:128" \
     COMFYUI_VERSION="${COMFYUI_VERSION}" \
     COMFYUI_PATH="/opt/comfyui" \
+    COMFYUI_CACHE_RAM="${COMFYUI_CACHE_RAM}" \
     MULTI_USER="${MULTI_USER}" \
     DATA_PATH="/data"
 

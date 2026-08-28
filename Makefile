@@ -34,6 +34,7 @@ $(foreach v,$(strip $(REQUIRED_VARS)),$(call require,$(v)))
 REPO_API_URL            ?= https://hub.docker.com/v2
 IMAGE_NAME              ?= comfyui
 UI_MANAGER_VERSION      ?= main
+COMFYUI_CACHE_RAM       ?= 16
 
 #BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
 BASE_IMAGE              := nvidia/cuda:$(CUDA_VERSION)-devel-$(OS_VERSION)
@@ -52,6 +53,7 @@ build:
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg COMFYUI_VERSION=$(COMFYUI_VERSION) \
+		--build-arg COMFYUI_CACHE_RAM=$(COMFYUI_CACHE_RAM) \
 		--build-arg REPO_NAMESPACE=$(REPO_NAMESPACE) \
 		--build-arg REPO_USERNAME=$(REPO_USERNAME) \
 		--build-arg REPO_NAME=$(REPO_NAME) \
@@ -97,4 +99,5 @@ run:
 		--ulimit memlock=-1 \
 		--ulimit stack=67108864 \
 		-e MULTI_USER=$(MULTI_USER) \
+		-e COMFYUI_CACHE_RAM=$(COMFYUI_CACHE_RAM) \
 		$(REPO_NAMESPACE)/$(IMAGE_NAME)
