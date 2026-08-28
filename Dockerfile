@@ -166,6 +166,7 @@ RUN git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention \
     && CUDA_HOME=/usr/local/cuda \
        TORCH_CUDA_ARCH_LIST='8.9' \
        pip install --no-cache-dir --no-build-isolation . \
+    && cd /tmp \
     && rm -rf /tmp/SageAttention
 
 # Setup ComfyUI in /opt
