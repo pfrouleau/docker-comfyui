@@ -174,6 +174,12 @@ export DISPLAY=:99
 export MODERNGL_WINDOW=headless
 export NVIDIA_DRIVER_CAPABILITIES=all
 
+# Enable comfy-kitchen CUDA backend for performance optimization
+# Set to comma-separated list of backends: cuda,triton,eager
+# Default: cuda (for GPU acceleration)
+export COMFY_KITCHEN_BACKENDS=${COMFY_KITCHEN_BACKENDS:-cuda}
+echo "comfy-kitchen backends configured: ${COMFY_KITCHEN_BACKENDS}"
+
 # Wait for Xvfb to start
 sleep 2
 
