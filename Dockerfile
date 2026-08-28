@@ -99,7 +99,7 @@ ARG TORCHVISION_VERSION=0.25.0
 ARG TORCHAUDIO_VERSION=2.10.0
 ARG TORCH_CUDA_ARCH_LIST=8.9
 ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu130
-ARG XFORMERS_VERSION=
+ARG XFORMERS_VERSION=0.0.35
 
 # Expose Torch CUDA arch list as an environment variable for builds
 ENV TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST}
@@ -135,12 +135,13 @@ RUN set -xe && \
 RUN set -xe && \
     pip uninstall -y xformers || true && \
     if [ -n "${XFORMERS_VERSION}" ]; then \
-        XFORMERS_REF="@${XFORMERS_VERSION}"; \
+        XFORMERS_REF="@v${XFORMERS_VERSION}"; \
     else \
         XFORMERS_REF=""; \
     fi && \
     python -m pip install --no-cache-dir --no-build-isolation --no-binary :all: \
-        "git+https://github.com/facebookresearch/xformers${XFORMERS_REF}" || true
+        "git+https://github.com/facebookresearch/xformers${XFORMERS_REF}" || \
+        echo "⚠️  Warning: xformers installation failed; continuing without xformers"
 
 # Install additional dependencies for QwenVL flash attention support
 RUN pip install --no-cache-dir \
